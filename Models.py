@@ -79,10 +79,11 @@ def graves(input_dim=26, rnn_size=512, output_dim=29, std=0.6):
     x = Bidirectional(LSTM(rnn_size,
                       return_sequences=True,
                       implementation=0))(x)
+    x = BatchNormalization(axis=-1)(x)
     x = TimeDistributed(Dense(output_dim, activation='softmax'))(x)
 
     y_pred = Activation('softmax', name='softmax')(x)
-    
+
     model = Model(inputs=input_data, outputs=y_pred)
     print(model.summary())
     return model

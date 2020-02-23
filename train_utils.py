@@ -8,6 +8,7 @@ import _pickle as pickle
 from keras import backend as K
 from keras.models import Model
 from keras.layers import (Input, Lambda)
+from keras.activations import relu
 from keras.optimizers import SGD
 from keras.callbacks import ModelCheckpoint   
 import os
@@ -16,6 +17,9 @@ def ctc_lambda_func(args):
     y_pred, labels, input_length, label_length = args
     return K.ctc_batch_cost(labels, y_pred, input_length, label_length)
 
+def clipped_relu(x):
+    return relu(x, max_value=20)
+    
 def add_ctc_loss(input_to_softmax):
     the_labels = Input(name='the_labels', shape=(None,), dtype='float32')
     input_lengths = Input(name='input_length', shape=(1,), dtype='int64')

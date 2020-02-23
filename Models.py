@@ -1,7 +1,9 @@
 from keras import backend as K
-from keras.models import Model
+from keras.models import Model, Sequential
 from keras.layers import (BatchNormalization, Conv1D, Dense, Input, 
-    TimeDistributed, Activation, Bidirectional, SimpleRNN, GRU, LSTM)
+    TimeDistributed, Activation, Bidirectional, GaussianNoise, SimpleRNN, GRU, Lambda, LSTM)
+from keras.activations import relu
+from train_utils import ctc_lambda_func, clipped_relu
 
 def simple_rnn_model(input_dim, output_dim=29):
     """ Build a recurrent network for speech 
@@ -17,6 +19,84 @@ def simple_rnn_model(input_dim, output_dim=29):
     model = Model(inputs=input_data, outputs=y_pred)
     model.output_length = lambda x: x
     print(model.summary())
+    return model
+
+# //Custom
+def Deep_LSTM_model(input_dim, units, activation, output_dim=29):
+    """ Build a Deep LSTM based recurrent network for speech recognition task
+    """
+     # Main acoustic input
+    input_data = Input(name='the_input', shape=(None, input_dim))
+
+    model = Sequential()
+    # Batch normalize the input
+    model.add(BatchNormalization(axis=-1, input_shape=(None, 161), name='BN_1'))
+    
+    # 1D Convs
+    model.add(Conv1D(512, 5, strides=1, activation=clipped_relu, name='Conv1D_1'))
+    model.add(Conv1D(512, 5, strides=1, activation=clipped_relu, name='Conv1D_2'))
+    model.add(Conv1D(512, 5, strides=2, activation=clipped_relu, name='Conv1D_3'))
+    
+    # Batch Normalization
+    model.add(BatchNormalization(axis=-1, name='BN_2'))
+    
+    # BiRNNs
+    model.add(Bidirectional(SimpleRNN(1280, return_sequences=True, name='BiRNN_1'), merge_mode='sum'))
+    model.add(Bidirectional(SimpleRNN(1280, return_sequences=True, name='BiRNN_2'), merge_mode='sum'))
+    model.add(Bidirectional(SimpleRNN(1280, return_sequences=True, name='BiRNN_3'), merge_mode='sum'))
+    model.add(Bidirectional(SimpleRNN(1280, return_sequences=True, name='BiRNN_4'), merge_mode='sum'))
+    model.add(Bidirectional(SimpleRNN(1280, return_sequences=True, name='BiRNN_5'), merge_mode='sum'))
+    model.add(Bidirectional(SimpleRNN(1280, return_sequences=True, name='BiRNN_6'), merge_mode='sum'))
+    model.add(Bidirectional(SimpleRNN(1280, return_sequences=True, name='BiRNN_7'), merge_mode='sum'))
+    
+    # Batch Normalization
+    model.add(BatchNormalization(axis=-1, name='BN_3'))
+    
+    # FC
+    model.add(TimeDistributed(Dense(1024, activation=clipped_relu, name='FC1')))
+    model.add(TimeDistributed(Dense(29, activation='softmax', name='y_pred')))
+    return model
+    # Specify the model
+    y_pred = model.outputs[0]
+    model = Model(inputs=input_data, outputs=y_pred)
+    model.output_length = lambda x: x
+    print(model.summary())
+    return model
+
+def graves(input_dim=26, rnn_size=512, output_dim=29, std=0.6):
+    """ Implementation of Graves 2006 model
+    Architecture:
+        Gaussian Noise on input
+        BiDirectional LSTM
+    Reference:
+        ftp://ftp.idsia.ch/pub/juergen/icml2006.pdf
+    """
+
+    K.set_learning_phase(1)
+    input_data = Input(name='the_input', shape=(None, input_dim))
+    # x = BatchNormalization(axis=-1)(input_data)
+
+    x = GaussianNoise(std)(input_data)
+    x = Bidirectional(LSTM(rnn_size,
+                      return_sequences=True,
+                      implementation=0))(x)
+    y_pred = TimeDistributed(Dense(output_dim, activation='softmax'))(x)
+
+    # Input of labels and other CTC requirements
+    labels = Input(name='the_labels', shape=[None,], dtype='int32')
+    input_length = Input(name='input_length', shape=[1], dtype='int32')
+    label_length = Input(name='label_length', shape=[1], dtype='int32')
+
+    # Keras doesn't currently support loss funcs with extra parameters
+    # so CTC loss is implemented in a lambda layer
+    loss_out = Lambda(ctc_lambda_func, output_shape=(1,), name='ctc')([y_pred,
+                                                                       labels,
+                                                                       input_length,
+                                                                       label_length])
+
+
+    model = Model(inputs=[input_data, labels, input_length, label_length], outputs=[loss_out])
+
     return model
 
 def rnn_model(input_dim, units, activation, output_dim=29):
@@ -126,18 +206,18 @@ def bidirectional_rnn_model(input_dim, units, output_dim=29):
     print(model.summary())
     return model
 
-def final_model():
-    """ Build a deep network for speech 
-    """
-    # Main acoustic input
-    input_data = Input(name='the_input', shape=(None, input_dim))
-    # TODO: Specify the layers in your network
-    ...
-    # TODO: Add softmax activation layer
-    y_pred = ...
-    # Specify the model
-    model = Model(inputs=input_data, outputs=y_pred)
-    # TODO: Specify model.output_length
-    model.output_length = ...
-    print(model.summary())
-    return model
+# def final_model():
+#     """ Build a deep network for speech 
+#     """
+#     # Main acoustic input
+#     input_data = Input(name='the_input', shape=(None, input_dim))
+#     # TODO: Specify the layers in your network
+#     ...
+#     # TODO: Add softmax activation layer
+#     y_pred = ...
+#     # Specify the model
+#     model = Model(inputs=input_data, outputs=y_pred)
+#     # TODO: Specify model.output_length
+#     model.output_length = ...
+#     print(model.summary())
+#     return model

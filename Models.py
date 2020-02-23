@@ -73,9 +73,9 @@ def graves(input_dim=26, rnn_size=512, output_dim=29, std=0.6):
 
     K.set_learning_phase(1)
     input_data = Input(name='the_input', shape=(None, input_dim))
-    # x = BatchNormalization(axis=-1)(input_data)
+    x = BatchNormalization(axis=-1)(input_data)
 
-    x = GaussianNoise(std)(input_data)
+    x = GaussianNoise(std)(x)
     x = Bidirectional(LSTM(rnn_size,
                       return_sequences=True,
                       implementation=0))(x)

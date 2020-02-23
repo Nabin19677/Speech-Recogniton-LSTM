@@ -8,4 +8,6 @@ do
 
     #Deleting flacfile which is converted to .wav file
     rm -rf "$flacfile"
+
+    echo "$flacfile has been deleted"
 done

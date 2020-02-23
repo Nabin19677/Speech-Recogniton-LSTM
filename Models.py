@@ -1,7 +1,7 @@
 from keras import backend as K
 from keras.models import Model, Sequential
 from keras.layers import (BatchNormalization, Conv1D, Dense, Input, 
-    TimeDistributed, Activation, Bidirectional, GaussianNoise, SimpleRNN, GRU, Lambda, LSTM)
+    TimeDistributed, Activation, Bidirectional,  GaussianNoise, SimpleRNN, GRU, Lambda, LSTM)
 from keras.activations import relu
 from train_utils import ctc_lambda_func, clipped_relu
 
@@ -55,7 +55,6 @@ def Deep_LSTM_model(input_dim, units, activation, output_dim=29):
     # FC
     model.add(TimeDistributed(Dense(1024, activation=clipped_relu, name='FC1')))
     model.add(TimeDistributed(Dense(29, activation='softmax', name='y_pred')))
-    return model
     # Specify the model
     y_pred = model.outputs[0]
     model = Model(inputs=input_data, outputs=y_pred)
@@ -96,7 +95,7 @@ def graves(input_dim=26, rnn_size=512, output_dim=29, std=0.6):
 
 
     model = Model(inputs=[input_data, labels, input_length, label_length], outputs=[loss_out])
-
+    print(model.summary())
     return model
 
 def rnn_model(input_dim, units, activation, output_dim=29):

@@ -85,6 +85,7 @@ def graves(input_dim=26, rnn_size=512, output_dim=29, std=0.6):
     y_pred = Activation('softmax', name='softmax')(x)
 
     model = Model(inputs=input_data, outputs=y_pred)
+    model.output_length = lambda x: x
     print(model.summary())
     return model
 

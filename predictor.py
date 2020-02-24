@@ -15,7 +15,7 @@ def get_predictions(index, partition, input_to_softmax, model_path):
     """
     # load the train and test data
     data_gen = AudioGenerator()
-    data_gen.load_train_data()
+    # data_gen.load_train_data()
     data_gen.load_validation_data()
 
     # obtain the true transcription and the audio features

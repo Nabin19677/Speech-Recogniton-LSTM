@@ -68,13 +68,13 @@ def train_model(input_to_softmax,
     model.compile(loss={'ctc': lambda y_true, y_pred: y_pred}, optimizer=optimizer)
 
     # # make results/ directory, if necessary
-    # if not os.path.exists('results'):
-    #     os.makedirs('results')
+    if not os.path.exists('results'):
+        os.makedirs('results')
 
-    # # add checkpointer
-    # checkpointer = ModelCheckpoint(filepath='results/'+save_model_path, verbose=0)
+    # add checkpointer
+    checkpointer = ModelCheckpoint(filepath='results/'+save_model_path, verbose=0)
 
-    checkpointer = ModelCheckpoint(filepath='../drive/My Drive/Colab Notebooks/results/'+save_model_path, verbose=0)
+    # checkpointer = ModelCheckpoint(filepath='../drive/My Drive/Colab Notebooks/results/'+save_model_path, verbose=0)
 
     # train the model
     hist = model.fit_generator(generator=audio_gen.next_train(), steps_per_epoch=steps_per_epoch,

@@ -4,4 +4,3 @@ LibriSpeech/
 __pycache__/
 *.tar.gz
 *.pyc
-*.json
